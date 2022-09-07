@@ -15,18 +15,19 @@ date_str = time.strftime("%Y%m%d_%H%M")
 
 print('***Load data***')
       
-
-import matplotlib
-matplotlib.use( 'Qt5agg' )
+#import matplotlib
+#matplotlib.use( 'Qt5agg' )
 
 
 
 
 # load diffraction data
-diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2020_nobackup\diff_data.npy')
+diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2020_nobackup\diff_dataTEST_20220907_1532.npy')
+
+#data should be saved as [position,angle,det1,det2]
 
 #extra cropping
-diff_data = diff_data[:,:,0:220]
+#diff_data = diff_data[:,:,0:220]
 
 #plot raw data
 plt.figure()
@@ -131,10 +132,10 @@ def bright_field(data,y,x):
             #print(index)
     return photons
 
-bf_map = bright_field((diff_data),nbr_rows,nbr_cols)
+bf_map = bright_field((diff_data[:,2]),nbr_rows,nbr_cols)
 
 fig, ax = plt.subplots(nrows=1)
-ax.imshow(np.log10(bf_map),cmap = 'Greys', interpolation='none', extent= extent_microns)
+ax.imshow(np.log10(bf_map),cmap = 'jet', interpolation='none', extent= extent_microns)
 plt.setp(ax, ylabel=r'y [$\mu$m]', xlabel=r'z [$\mu$m]')#,title=r'Bright field' 3d?
 plt.show()
 
