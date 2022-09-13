@@ -20,15 +20,14 @@ import time
 date_str = time.strftime("%Y%m%d_%H%M")
 
 
-save_dir = r'C:\Users\Sanna\NanoMAX_May2020_nobackup\diff_dataTEST_'
+nanowire = 'nw127_1'
+savepath = 'F:/Susanna/NanoMAX_perovNW_May2022/'+nanowire+'/'
 
-mask_directory = 'C:/Users/Sanna/Documents/Beamtime/NanoMAX_May2020/beamtime_folder/process/'
+maskpath = 'C:/Users/Sanna/Documents/Beamtime/NanoMAX_May2020/beamtime_folder/process/'
 mask_file_name = 'merlin_mask_200430_8keV.h5'
 
-
-data_directory = 'C:/Users/Sanna/NanoMAX_May2020_rawdata_selection/raw/'
-scans = [429,430,431] #np.concatenate( [ np.arange(429,453) , np.arange(491,503) , np.arange(465,491) ])
-
+datapath = 'E:/Jesper_beamtimes/NanoMAX_May2022/20211260/2022051808/raw/%s/' % sample
+scans = [934,935,936]#np.concatenate( [ np.arange(429,453) , np.arange(491,503) , np.arange(465,491) ])
 
 #choose roi on detetor
 raw_slicey = slice(0,270)
@@ -65,7 +64,7 @@ for scan_nbr, scan in enumerate(scans):
                     frames_in_roi.append(row * Nx_orig + col)
                     
     
-    with h5py.File(data_directory + '000' + str(scan) +'.h5','r' ) as fp:
+    with h5py.File(datapath + '000' + str(scan) +'.h5','r' ) as fp:
         print('loading scan ' + str(scan))
 
         #I0= np.array(fp['entry/measurement/alba/channel1'])
@@ -77,7 +76,7 @@ for scan_nbr, scan in enumerate(scans):
         #gonphis.append(gonphi)
 
 #load mask
-with h5py.File(mask_directory  + mask_file_name,'r' ) as fp:
+with h5py.File(maskpath  + mask_file_name,'r' ) as fp:
     mask_Merlin = np.array(fp['mask'])
 
 #apply mask
@@ -87,8 +86,9 @@ data = data * mask_Merlin[raw_slicey,raw_slicex]
 data= np.swapaxes(data, 0,1)
 
 #Save diffraction data
-np.save(save_dir+ date_str, data)
-print(r'Saved diff data to C:\Users\Sanna\NanoMAX_May2020_nobackup\diff_dataTEST_%s.np'%date_str)
+np.save(savepath+ date_str, data)
+print(r'Saved diff data to path')
+print(savepath)
 print('Shape of data is: ', data.shape)
 
 #plot what you are saving
@@ -96,6 +96,6 @@ plt.figure()
 plt.imshow(np.log10(sum(sum(data))),cmap='magma', interpolation='none')
 plt.title('Summed intensity for all rotations (log)')
 plt.colorbar()
-plt.savefig('ggg2')
+plt.savefig(savepath + 'ggg2')
 plt.show()
 
