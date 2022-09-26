@@ -199,6 +199,7 @@ Qy = -Q2
 Qx = Q3 - g.sintheta() * Q1
             
 
+
 # NOTE Q2-Qy should not have changed but the other ones should. note 2, Q3 and Qx should be much larger (never negative).
 
 qx = Qx[:,0,0]
