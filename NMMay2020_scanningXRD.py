@@ -13,16 +13,17 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import time
 date_str = time.strftime("%Y%m%d_%H%M")
 
-print('***Load data***')
+print('***Load data np file***')
       
 #import matplotlib
 #matplotlib.use( 'Qt5agg' )
 
 
-
-
+savepath = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\scanningXRD\unshifted/'
+savepath_bf = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\bf\shifted'
+array = '20220920_1211_allpeaks.npy' # remove ths'20220916_1419.npy' #'20220916_1140.npy'
 # load diffraction data
-diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2020_nobackup\diff_dataTEST_20220907_1532.npy')
+diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s387-411/'+array)
 
 #data should be saved as [position,angle,det1,det2]
 
@@ -31,8 +32,9 @@ diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2020_nobackup\diff_dataTEST_2022
 
 #plot raw data
 plt.figure()
-plt.imshow(np.log10(sum((diff_data[140]))),cmap='magma', interpolation='none')
+plt.imshow(np.log10(sum(sum(diff_data))),cmap='magma', interpolation='none')
 plt.title('All data')
+#plt.savefig('all_diffraction_%s'%date_str)
 plt.colorbar()
 plt.show()
 
@@ -51,28 +53,29 @@ plt.suptitle('First index S#489 (left) and last index S#429 (right) of data arra
 rocking_curve = sum(np.sum(np.sum(diff_data, axis=-1),axis=-1))
 
 plt.figure()
-plt.plot(rocking_curve)            
-plt.title('Data is sorted with the highest gonphi first \n (= the highest scan number first) ((why??)')
+plt.plot(rocking_curve)
+plt.title('Rocking curve for all diffraction S(387-411)')            
 plt.show()
-
-# reverse the order of the angles
-diff_data = diff_data[:,::-1]
-
-
-plt.figure(); plt.imshow((((diff_data[100,0]))),cmap='jet', interpolation='none'); plt.title('position 100'); plt.colorbar()
+#plt.title('Data is sorted with the highest gonphi first \n (= the highest scan number first) ((why??)')
+#NOT NOW, right
 
 
-rocking_curve = sum(np.sum(np.sum(diff_data, axis=-1),axis=-1))
+## reverse the order of the angles
+#diff_data = diff_data[:,::-1]
+#
+#
+#plt.figure(); plt.imshow((((diff_data[100,0]))),cmap='jet', interpolation='none'); plt.title('position 100'); plt.colorbar()
+#
+#
+#rocking_curve = sum(np.sum(np.sum(diff_data, axis=-1),axis=-1))
+#
+#plt.figure()
+#plt.plot(rocking_curve)            
+#plt.title('After reversed axis)')
+#plt.show()
 
-plt.figure()
-plt.plot(rocking_curve)            
-plt.title('After reversed axis)')
-plt.show()
 
-print('This means that the data is sorted with higher gonphi first? and hi etc..')
 print('***Define geometry of experiment***')
-print('TODO: Bragg theta not calibrated####################')
-print('Now using the theoretical value since the gonphi is 2 deg away from theoretical')
 
 #define geoemtry class to calculate q1 q2 q3
 class Geometry:
@@ -104,10 +107,10 @@ class Geometry:
 #%% 
 ##### Input parameters
    
-g = Geometry((0.02, 55*1E-6, 55*1E-6), shape=(diff_data.shape[1], diff_data.shape[2], diff_data.shape[3]), energy=10.0, distance=1.0, theta_bragg=10.54)
-dx = dy = 50e-9
-nbr_rows = 8
-nbr_cols = 60
+g = Geometry((0.1, 55*1E-6, 55*1E-6), shape=(diff_data.shape[1], diff_data.shape[2], diff_data.shape[3]), energy=15.0, distance=0.30495, theta_bragg=7.9)
+dx = dy = 60e-9
+nbr_rows = 24#51
+nbr_cols = 131#131#128#131
 
 extent_microns = [ 0, dx*(nbr_cols-1)*1E6,0, dy*(nbr_rows-1)*1E6]
 
@@ -120,7 +123,6 @@ def bright_field(data,y,x):
     index = 0
     photons = np.zeros((y,x)) 
     for row in range(0,y):
-        print( row)
         for col in range(0,x):
             photons[row,col] = np.sum(data[index]) #/ max_intensity
             
@@ -132,12 +134,23 @@ def bright_field(data,y,x):
             #print(index)
     return photons
 
-bf_map = bright_field((diff_data[:,2]),nbr_rows,nbr_cols)
-
+#for scan in range(0,diff_data.shape[1],6):
+#    bf_map = bright_field((diff_data[:,scan]),nbr_rows,nbr_cols)
+#    
+#    fig, ax = plt.subplots(nrows=1)
+#    ax.imshow(np.log10(bf_map),cmap = 'jet', interpolation='none', extent= extent_microns)
+#    plt.setp(ax, ylabel=r'y [$\mu$m]', xlabel=r'z [$\mu$m]')#,title=r'Bright field' 3d?
+#    plt.show()
+    #plt.savefig(savepath_bf+ r'\rot%d'%scan)
+#print(r'bf saved to ')
+#print(savepath_bf)
+    
+bf_map = bright_field(np.sum((diff_data[:,:]),axis=1),nbr_rows,nbr_cols)
 fig, ax = plt.subplots(nrows=1)
 ax.imshow(np.log10(bf_map),cmap = 'jet', interpolation='none', extent= extent_microns)
 plt.setp(ax, ylabel=r'y [$\mu$m]', xlabel=r'z [$\mu$m]')#,title=r'Bright field' 3d?
 plt.show()
+
 
 #%%
 
@@ -343,7 +356,7 @@ print('***plot XRD maps***')
     
 fig = plt.figure(figsize=(10,3))
 plt.title(r'Full range BF', loc='left', pad =-12, color ='black')
-norm1 = DivergingNorm(vmin=0, vcenter=0.15, vmax = 1)
+#norm1 = DivergingNorm(vmin=0, vcenter=0.15, vmax = 1)
 plt.imshow(bf_map/bf_map.max(), cmap='gray', interpolation='none')#,extent=extent_microns_cut, norm = norm1)
 plt.ylabel(r'$y$ [$\mathrm{\mu}$m]') #
 plt.xticks([])
@@ -354,9 +367,9 @@ tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_
 #XRD_mask = np.ones((XRD_mask.shape))
 
 
-plt.scatter(13, 2, s=500, c='red', marker='x')
-plt.scatter(18, 2, s=500, c='red', marker='x')
-plt.scatter(40, 2, s=500, c='red', marker='x')
+#plt.scatter(13, 2, s=500, c='red', marker='x')
+#plt.scatter(18, 2, s=500, c='red', marker='x')
+#plt.scatter(40, 2, s=500, c='red', marker='x')
 
 #%%
 class Formatter(object):
@@ -369,16 +382,16 @@ class Formatter(object):
   
 #def plot_XRD_polar():    
 # cut the images in x-range:start from the first pixel: 
-start_cutXat = 11
+start_cutXat = 0
 
 # replace the x-scales end-postion in extent_motorposition. 
 extent_motorpos_cut = np.copy(extent_microns)
 ###extent_motorpos_cut[1] = 2.0194197798363955 segmentedNW
-cutXat = 44   
-cutYat = 6
+cutXat = -1   
+cutYat = -1
 origin = np.array([-1.1271288e-06, -1.1271288e-06])
 #extent_microns_cut = [origin[0]*1E6, origin[0]*1E6 + dx*(cutXat-start_cutXat)*1E6, origin[1]*1E6, origin[1]*1E6+dy*(cutYat)*1E6]
-extent_microns_cut = [0, (0.05)*(cutXat-start_cutXat), 0, 0.05*(cutYat)]
+extent_microns_cut = [0, (0.06)*(cutXat-start_cutXat), 0, 0.06*(cutYat)]
 
 print('mean value BF: ')
 print( np.mean(sum(bf_map)))
@@ -394,7 +407,7 @@ colormap = 'RdBu_r' #Spectral' #RdYlGn'#coolwarm' # 'bwr' #'PiYG'# #'RdYlBu' # '
 fig, ax = plt.subplots(ncols=1, nrows=4)
 plt.subplots_adjust(hspace = 0.245)
 norm1 = DivergingNorm(vmin=0, vcenter=0.15, vmax = 1)
-img0 = ax[0].imshow(bf_map[:cutYat,start_cutXat:cutXat]/bf_map[:,start_cutXat:cutXat].max(), cmap='gray', interpolation='none',extent=extent_microns_cut, norm = norm1)
+img0 = ax[0].imshow(bf_map[:cutYat,start_cutXat:cutXat]/bf_map[:,start_cutXat:cutXat].max(), cmap='gray', interpolation='none')#,extent=extent_microns_cut, norm = norm1)
 ax[0].set_title(r'Total intensity', loc='left', pad =-5, color ='black')
 ax[0].set_ylabel(r'$\mu$m')
 ax[0].set_xticks([])
@@ -406,15 +419,14 @@ cb = plt.colorbar(img0, cax=cax, ticks=(0, 0.5, 1))
 tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
 
 # if you want no mask use:
-#XRD_mask = np.ones((XRD_mask.shape))
+XRD_mask = np.ones((XRD_mask.shape))
 
 #plt.subplot(412)   
-#calculate lattice constant a from |q|:       
-# TODO: this is wrong for the homogenous wires, its not (111), for segmented InP i dont know    
+#calculate lattice constant c from |q|:       
 d =  2*np.pi/  XRD_absq
-a_lattice_exp = d * np.sqrt(3)   
+c_lattice_exp = d * np.sqrt(3)   
 
-a_table = 5.8687E-10             
+
 
 #print 'mean lattice constant is %d' %np.mean(a_lattice_exp)
 #imshow(a_lattice_exp)
@@ -427,32 +439,32 @@ strain = 100*XRD_mask[:cutYat,start_cutXat:cutXat]*(a_lattice_exp[:cutYat,start_
 #strain = 100*XRD_mask[:cutYat,start_cutXat:cutXat]*(( a_table - a_lattice_exp[:cutYat,start_cutXat:cutXat] )/a_lattice_exp[:cutYat,start_cutXat:cutXat])
 
 norm2 = DivergingNorm( vcenter=0)
-img1 = ax[1].imshow(strain, cmap=colormap, interpolation='none', extent=extent_microns_cut)#
+img1 = ax[1].imshow(strain, cmap=colormap, interpolation='none')#, extent=extent_microns_cut)#
 #plt.imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*a_lattice_exp[:cutYat,start_cutXat:cutXat], cmap='jet',interpolation='none')#,extent=extent_motorpos_cut) 
 
 #plt.imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_absq[:cutYat,start_cutXat:cutXat]*1E-8, cmap=colormap,interpolation='none',extent=extent_motorpos_cut) 
 #plt.title('Length of Q-vector |Q|)', loc='left', pad =-12)
-ax[1].set_title(r'Axial Strain (%)', loc='left', pad =-12)   #
+ax[1].set_title(r'd-spacing 004', loc='left', pad =-12)   #
 #plt.title('Lattice constant a')
 #plt.ylabel(r'$y$ [$\mathrm{\mu}$m]')  
 ax[1].set_ylabel(r'$\mu$m')
 ax[1].set_xticks([])
 divider = make_axes_locatable(ax[1])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img1, cax=cax, ticks=(-0.15, 0, 0.15 ,0.30))
+cb = plt.colorbar(img1, cax=cax)#, ticks=(-0.15, 0, 0.15 ,0.30))
 
 tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
 
 #plt.subplot(413)
 norm3 = DivergingNorm( vcenter=0)
-img2 = ax[2].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_alpha[:cutYat,start_cutXat:cutXat], cmap='coolwarm', interpolation='none',extent=extent_microns_cut, norm=norm3) 
+img2 = ax[2].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_alpha[:cutYat,start_cutXat:cutXat], cmap='coolwarm', interpolation='none')#,extent=extent_microns_cut, norm=norm3) 
 # cut in extent_motorposition. x-pixel nbr 67 is at 2.0194197798363955
 ax[2].set_title(r'$\alpha$ (mrad)', loc='left', pad =-12)
 ax[2].set_ylabel(r'$\mu$m')
 ax[2].set_xticks([])
 divider = make_axes_locatable(ax[2])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img2, cax=cax, ticks=(-1.5, 0, 1.5))
+cb = plt.colorbar(img2, cax=cax)#, ticks=(-1.5, 0, 1.5))
 
 tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
 
@@ -461,7 +473,7 @@ tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_
    
 #plt.subplot(414)
 norm4 = DivergingNorm( vcenter=0)
-img3 = ax[3].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_beta[:cutYat,start_cutXat:cutXat], cmap='bwr',interpolation='none',extent=extent_microns_cut, norm=norm4) 
+img3 = ax[3].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_beta[:cutYat,start_cutXat:cutXat], cmap='bwr',interpolation='none')#,extent=extent_microns_cut, norm=norm4) 
 plt.setp(ax[3].xaxis.get_majorticklabels(), rotation=70 )
 ax[3].set_title('$\\beta$ (mrad)', loc='left', pad =-12)
 #ax[3].set_xticks([])
@@ -471,7 +483,7 @@ ax[3].set_xlabel(r'$\mu$m')
 ax[3].set_ylabel(r'$\mu$m')
 divider = make_axes_locatable(ax[3])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img3, cax=cax, ticks=(-6, -3, 0 ))
+cb = plt.colorbar(img3, cax=cax)#, ticks=(-6, -3, 0 ))
 
 #tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator; po.update_ticks()
 
@@ -492,30 +504,8 @@ plt.title('Strain and BF lineout')
 #np.save(r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_May2020\Analysis\scans429_503\XRD\20220405_lineout_XRD',lineout_strain)
 #np.save(r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_May2020\Analysis\scans429_503\XRD\20220405_lineout_xx',lineout_xx)  
 
-#%%#
-
-# plot strain
-fig, ax = plt.subplots(ncols=1)
-# to get to colormap at 0 at white color 
-norm2 = DivergingNorm( vcenter=0)
-img1 = ax.imshow(strain, cmap=colormap, interpolation='none', extent=extent_microns_cut, norm=norm2)
-plt.setp(ax.xaxis.get_majorticklabels(), rotation=70 )
-ax.set_xlabel('$\mu$m')
-ax.set_ylabel('$\mu$m')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img, cax=cax, ticks=(-0.15, 0, 0.15 ,0.30))
-#cb.ax.set_yticklabels(['-$\pi$', '-$\pi/2$', '0', '$\pi/2$', '$\pi$'])
-#ax.set_title('Strain [%]')
-#cb = plt.colorbar(img)
-plt.show()
 
 #%%
-# calculate mean value in each segment (InP)
-mean45 = np.nanmean(strain[:,0:10])
-mean80 = np.nanmean(strain[:,10:25])
-mean170 = np.nanmean(strain[:,26:-1])
-print( mean45,mean80,mean170)
 
 def q_abs_map():
     q_map_temp = XRD_mask[:,start_cutXat:cutXat]*XRD_absq[:,start_cutXat:cutXat]

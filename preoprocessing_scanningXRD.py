@@ -34,12 +34,12 @@ datapath = 'C:/Users/Sanna/NanoMAX_May2022_Perovskites_raw_selection/s381_411/'
 #%%
 
 scans = np.arange(387,411+1).tolist()#[387,411]#,397]#np.concatenate( [ np.arange(429,453) , np.arange(491,503) , np.arange(465,491) ])
-scans = [395] 
+#scans = [398] 
 #choose roi on detetor
 raw_slicey = slice(20,180)
 raw_slicex = slice(150,300)
  
-position_roi = np.arange(2000,3000,1)    #upp till 2000 väldigt lite från 3000 också lite
+position_roi = np.arange(2000,3000,20)    #upp till 2000 väldigt lite från 3000 också lite
 
 data = []
 for rot_nbr, scan in enumerate(scans):
@@ -83,7 +83,7 @@ for pos_nbr, position in enumerate(position_roi.tolist()):
     #plot roi
     plt.figure()
     plt.imshow(np.log10(((data[0][pos_nbr]))),cmap='jet', interpolation='none')
-    plt.title('1000 central frames in scan 395. Position %d (log) '%position)
+    plt.title('1000 central frames in scan 398. Position %d (log) '%position)
     plt.colorbar()
     plt.savefig(savepath + 'diffraction_position%d'%position)
 
