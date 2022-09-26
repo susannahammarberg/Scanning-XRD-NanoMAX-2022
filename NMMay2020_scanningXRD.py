@@ -28,7 +28,11 @@ array = '20220920_1211_allpeaks.npy' # remove ths'20220916_1419.npy' #'20220916_
 # load diffraction data
 diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s387-411/'+array)
 
-#data should be saved as [position,angle,det1,det2]
+#data should be saved as [position,angle,dety,detx]
+
+#'20220920_1211_allpeaks.npy offset
+y_offset = 8
+x_offset = -8
 
 #extra cropping
 #diff_data = diff_data[:,:,0:220]
@@ -155,10 +159,12 @@ def def_q_vectors():
     #  units of reciprocal meters [m-1]
     q_abs = 4 * np.pi / g.wavelength * g.sintheta()
     
-    q1 = np.linspace(-g.dq1*g.shape[1]/2.+q_abs/g.costheta(), g.dq1*g.shape[1]/2.+q_abs/g.costheta(), g.shape[1]) # ~z
+    #offset from calibrated detector center
+    q1 = np.linspace(-g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*x_offset, g.dq1*g.shape[1]/2.+q_abs/g.costheta() +g.dq1*x_offset, g.shape[1]) # ~z
     # q3 defined as centered around 0, that means adding the component from q1
     q3 = np.linspace(-g.dq3*g.shape[0]/2. + g.sintheta()*q1.min() , g.dq3*g.shape[0]/2.+ g.sintheta()*q1.max(), g.shape[0]) #~x       
-    q2 = np.linspace(-g.dq2*g.shape[2]/2., g.dq2*g.shape[2]/2., g.shape[2]) #        ~y
+    #offset from calibrated detector center
+    q2 = np.linspace(-g.dq2*g.shape[2]/2. + g.dq2*y_offset, g.dq2*g.shape[2]/2. + g.dq2*y_offset, g.shape[2]) #        ~y
     
 def_q_vectors()
 
@@ -171,6 +177,7 @@ plt.xticks(range(0,len(q2),tick_interval), np.round(q2[::tick_interval]*1E-8,2))
 ax.set_ylabel('q1 qz [Å-1]')
 ax.set_xlabel('q2 qy [*10^8 m-1]')
 plt.show()
+
 
 # --------------------------------------------------------------
 # Make a meshgrid of q3 q1 q2 and transform it to qx qz qy.
