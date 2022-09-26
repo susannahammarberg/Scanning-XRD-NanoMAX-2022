@@ -161,10 +161,12 @@ def def_q_vectors():
     
     #offset from calibrated detector center
     q1 = np.linspace(-g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*x_offset, g.dq1*g.shape[1]/2.+q_abs/g.costheta() +g.dq1*x_offset, g.shape[1]) # ~z
+    
     # q3 defined as centered around 0, that means adding the component from q1
     q3 = np.linspace(-g.dq3*g.shape[0]/2. + g.sintheta()*q1.min() , g.dq3*g.shape[0]/2.+ g.sintheta()*q1.max(), g.shape[0]) #~x       
     #offset from calibrated detector center
-    q2 = np.linspace(-g.dq2*g.shape[2]/2. + g.dq2*y_offset, g.dq2*g.shape[2]/2. + g.dq2*y_offset, g.shape[2]) #        ~y
+    # neg offset just because of how i rotated the dataset now with lower y to the left
+    q2 = np.linspace(-g.dq2*g.shape[2]/2. - g.dq2*y_offset, g.dq2*g.shape[2]/2. - g.dq2*y_offset, g.shape[2]) #        ~y
     
 def_q_vectors()
 
@@ -342,10 +344,6 @@ XRD_qx, XRD_qz, XRD_qy, data_orth_coord = XRD_analysis() # units of 1/m
 XRD_absq =  np.sqrt(XRD_qx**2 + XRD_qy**2 + XRD_qz**2)
 XRD_alpha = np.arcsin( XRD_qy/ XRD_absq)
 XRD_beta  = np.arctan( XRD_qx / XRD_qz)
-# detta borde väl definieras som, hur stor är vinkeln från detektorn, när detektorn är på center av denteoretiska bragg vinkeln, alltså
-
-print('OOOOOOOOOOBs, beta definition')
-#XRD_beta  = np.arctan( (XRD_qx + qx[int(len(qx)/2)]) / XRD_qz)
 
 
 #%%
