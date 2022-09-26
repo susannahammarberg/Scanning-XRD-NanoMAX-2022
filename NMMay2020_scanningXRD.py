@@ -15,6 +15,9 @@ date_str = time.strftime("%Y%m%d_%H%M")
 
 print('***Load data np file***')
       
+#data should be
+
+
 #import matplotlib
 #matplotlib.use( 'Qt5agg' )
 
@@ -56,23 +59,6 @@ plt.figure()
 plt.plot(rocking_curve)
 plt.title('Rocking curve for all diffraction S(387-411)')            
 plt.show()
-#plt.title('Data is sorted with the highest gonphi first \n (= the highest scan number first) ((why??)')
-#NOT NOW, right
-
-
-## reverse the order of the angles
-#diff_data = diff_data[:,::-1]
-#
-#
-#plt.figure(); plt.imshow((((diff_data[100,0]))),cmap='jet', interpolation='none'); plt.title('position 100'); plt.colorbar()
-#
-#
-#rocking_curve = sum(np.sum(np.sum(diff_data, axis=-1),axis=-1))
-#
-#plt.figure()
-#plt.plot(rocking_curve)            
-#plt.title('After reversed axis)')
-#plt.show()
 
 
 print('***Define geometry of experiment***')
@@ -106,8 +92,8 @@ class Geometry:
 
 #%% 
 ##### Input parameters
-   
-g = Geometry((0.1, 55*1E-6, 55*1E-6), shape=(diff_data.shape[1], diff_data.shape[2], diff_data.shape[3]), energy=15.0, distance=0.30495, theta_bragg=7.9)
+   #for now shape is rotations, detx, dety
+g = Geometry((0.1, 55*1E-6, 55*1E-6), shape=(diff_data.shape[1], diff_data.shape[3], diff_data.shape[2]), energy=15.0, distance=0.30495, theta_bragg=7.9)
 dx = dy = 60e-9
 nbr_rows = 24#51
 nbr_cols = 131#131#128#131
@@ -156,6 +142,12 @@ plt.show()
 
 print('***XRD analysis***')
 
+#coordinate system is defined so that data should be sorted with (position,rotation (lower to hiugher theta),det x, det y)
+#TODO change to more logical (y,x) 
+# and also, y does not have to be defined as neg now
+diff_data = np.rot90(diff_data,k=-1, axes=(2, 3))
+
+
 # Function defines q1 q2 q3 + q_abs from the geometry function 
 # (See "Bending and tilts in NW..." ppt)
 def def_q_vectors():
@@ -172,13 +164,13 @@ def_q_vectors()
 
 #test of orientations
 fig, ax = plt.subplots(ncols=1) # figsize=(10,3)
-ax.imshow(np.log10(sum((diff_data[:,0]))),cmap='jet', interpolation='none')
-tick_interval = 10
+ax.imshow(np.log10(sum(sum(diff_data))),cmap='jet', interpolation='none',origin='upper')
+tick_interval = 20
 plt.yticks(range(0,len(q1),tick_interval), np.round(q1[::tick_interval]*1E-10,2))
 plt.xticks(range(0,len(q2),tick_interval), np.round(q2[::tick_interval]*1E-8,2))
 ax.set_ylabel('q1 qz [Å-1]')
 ax.set_xlabel('q2 qy [*10^8 m-1]')
-
+plt.show()
 
 # --------------------------------------------------------------
 # Make a meshgrid of q3 q1 q2 and transform it to qx qz qy.
@@ -194,8 +186,7 @@ Q3,Q1,Q2 = np.meshgrid(q3, q1, q2, indexing='ij')
 # transform the Q-space grid to from experimental grid to orthoganal
 # go from natura to cartesian coordinate system
 Qz = g.costheta() * Q1
-#obs should have a minus sign
-Qy = -Q2
+Qy = Q2
 Qx = Q3 - g.sintheta() * Q1
             
 
@@ -213,7 +204,7 @@ plt.figure(); plt.plot(qy); plt.title('qy')
 fig, ax = plt.subplots(ncols=3)
 img = ax[0].imshow(Qx[:,:,0]); plt.colorbar(img)
 img2 = ax[1].imshow(Qz[:,:,0]); plt.colorbar(img2)
-
+plt.show()
 
 #test of orientations
 fig, ax = plt.subplots(ncols=1) # figsize=(10,3)
