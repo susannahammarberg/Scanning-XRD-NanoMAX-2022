@@ -35,10 +35,22 @@ scans = np.arange(387,411+1).tolist()# , np.arange(491,503) , np.arange(465,491)
 #raw_slicey = slice(0,270)
 #raw_slicex = slice(250,-1)
 
+det_cenx = 233 # defined from Si calibration
+det_ceny = 92 #defined not from Si calibration cos its too far off. using the center of uncoated NW instead. 
 
 #smaller but all peaks
 raw_slicey = slice(50,150)
 raw_slicex = slice(150,300)
+
+#for all peaks analysis
+y_cen = raw_slicey.start + int((raw_slicey.stop-raw_slicey.start)/2) 
+x_cen = raw_slicex.start + int((raw_slicex.stop-raw_slicex.start)/2) 
+
+#offset of diffraction centers from hte caliubrated detector centers
+#calculate offset in x and y: (in pixels)
+#TODO save metadata as file with  save with np data. save metadata. roi, etc etc
+y_offset = y_cen - det_ceny
+y_offset = x_cen - det_cenx
 
 #PEAK 1
 #raw_slicey = slice(20,180)

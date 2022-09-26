@@ -378,12 +378,14 @@ start_cutXat = 0
 
 # replace the x-scales end-postion in extent_motorposition. 
 extent_motorpos_cut = np.copy(extent_microns)
-###extent_motorpos_cut[1] = 2.0194197798363955 segmentedNW
+
 cutXat = -1   
 cutYat = -1
-origin = np.array([-1.1271288e-06, -1.1271288e-06])
+
 #extent_microns_cut = [origin[0]*1E6, origin[0]*1E6 + dx*(cutXat-start_cutXat)*1E6, origin[1]*1E6, origin[1]*1E6+dy*(cutYat)*1E6]
-extent_microns_cut = [0, (0.06)*(cutXat-start_cutXat), 0, 0.06*(cutYat)]
+#(cutXat-start_cutXat)
+#(left, right, bottom, top) 
+extent_microns_cut = [0, dx*nbr_cols*1E6, 0, dy*nbr_rows*1E6]
 
 print('mean value BF: ')
 print( np.mean(sum(bf_map)))
@@ -399,7 +401,7 @@ colormap = 'RdBu_r' #Spectral' #RdYlGn'#coolwarm' # 'bwr' #'PiYG'# #'RdYlBu' # '
 fig, ax = plt.subplots(ncols=1, nrows=4)
 plt.subplots_adjust(hspace = 0.245)
 norm1 = DivergingNorm(vmin=0, vcenter=0.15, vmax = 1)
-img0 = ax[0].imshow(bf_map[:cutYat,start_cutXat:cutXat]/bf_map[:,start_cutXat:cutXat].max(), cmap='gray', interpolation='none')#,extent=extent_microns_cut, norm = norm1)
+img0 = ax[0].imshow(bf_map[:cutYat,start_cutXat:cutXat]/bf_map[:,start_cutXat:cutXat].max(), cmap='gray', interpolation='none',extent=extent_microns_cut, norm = norm1)
 ax[0].set_title(r'Total intensity', loc='left', pad =-5, color ='black')
 ax[0].set_ylabel(r'$\mu$m')
 ax[0].set_xticks([])
@@ -418,22 +420,21 @@ XRD_mask = np.ones((XRD_mask.shape))
 d =  2*np.pi/  XRD_absq
 c_lattice_exp = d * np.sqrt(3)   
 
-
+d_teor =2.93975e-10 #004
 
 #print 'mean lattice constant is %d' %np.mean(a_lattice_exp)
 #imshow(a_lattice_exp)
 #plt.title('Lattice conastant a [$\AA$]')
-mean_a = np.nanmean(XRD_mask[:cutYat,start_cutXat:cutXat]*a_lattice_exp[:cutYat,start_cutXat:cutXat])
+#mean_a = np.nanmean(XRD_mask[:cutYat,start_cutXat:cutXat]*c_lattice_exp[:cutYat,start_cutXat:cutXat])
 #TODO try with reference strain equal to the center of the largest segment (for InP) # tody try with reference from the other NWs
 #mean_strain = a_lattice_exp[:cutYat,start_cutXat:cutXat].max() 
 
-strain = 100*XRD_mask[:cutYat,start_cutXat:cutXat]*(a_lattice_exp[:cutYat,start_cutXat:cutXat]-mean_a)/mean_a
+#strain = 100*XRD_mask[:cutYat,start_cutXat:cutXat]*(c_lattice_exp[:cutYat,start_cutXat:cutXat]-mean_a)/mean_a
 #strain = 100*XRD_mask[:cutYat,start_cutXat:cutXat]*(( a_table - a_lattice_exp[:cutYat,start_cutXat:cutXat] )/a_lattice_exp[:cutYat,start_cutXat:cutXat])
 
 norm2 = DivergingNorm( vcenter=0)
-img1 = ax[1].imshow(strain, cmap=colormap, interpolation='none')#, extent=extent_microns_cut)#
+img1 = ax[1].imshow(d, cmap=colormap, interpolation='none', extent=extent_microns_cut)#
 #plt.imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*a_lattice_exp[:cutYat,start_cutXat:cutXat], cmap='jet',interpolation='none')#,extent=extent_motorpos_cut) 
-
 #plt.imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_absq[:cutYat,start_cutXat:cutXat]*1E-8, cmap=colormap,interpolation='none',extent=extent_motorpos_cut) 
 #plt.title('Length of Q-vector |Q|)', loc='left', pad =-12)
 ax[1].set_title(r'd-spacing 004', loc='left', pad =-12)   #
@@ -443,13 +444,13 @@ ax[1].set_ylabel(r'$\mu$m')
 ax[1].set_xticks([])
 divider = make_axes_locatable(ax[1])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img1, cax=cax)#, ticks=(-0.15, 0, 0.15 ,0.30))
+cb = plt.colorbar(img1, cax=cax, ticks=(2.975E-10, 3.0E-10, 3.025E-10, 3.05E-10, 3.075E-10, 3.10E-10))
 
-tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
+#tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
 
 #plt.subplot(413)
 norm3 = DivergingNorm( vcenter=0)
-img2 = ax[2].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_alpha[:cutYat,start_cutXat:cutXat], cmap='coolwarm', interpolation='none')#,extent=extent_microns_cut, norm=norm3) 
+img2 = ax[2].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_alpha[:cutYat,start_cutXat:cutXat], cmap='coolwarm', interpolation='none',extent=extent_microns_cut, norm=norm3) 
 # cut in extent_motorposition. x-pixel nbr 67 is at 2.0194197798363955
 ax[2].set_title(r'$\alpha$ (mrad)', loc='left', pad =-12)
 ax[2].set_ylabel(r'$\mu$m')
@@ -465,7 +466,7 @@ tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_
    
 #plt.subplot(414)
 norm4 = DivergingNorm( vcenter=0)
-img3 = ax[3].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_beta[:cutYat,start_cutXat:cutXat], cmap='bwr',interpolation='none')#,extent=extent_microns_cut, norm=norm4) 
+img3 = ax[3].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_beta[:cutYat,start_cutXat:cutXat], cmap='bwr',interpolation='none',extent=extent_microns_cut, norm=norm4) 
 plt.setp(ax[3].xaxis.get_majorticklabels(), rotation=70 )
 ax[3].set_title('$\\beta$ (mrad)', loc='left', pad =-12)
 #ax[3].set_xticks([])
@@ -485,15 +486,15 @@ cb = plt.colorbar(img3, cax=cax)#, ticks=(-6, -3, 0 ))
 #plt.savefig('C:/Users/Sanna/Documents/Beamtime/NanoMAX062017/Analysis_ptypy/scan461_/scanningXRD_InP/%s_xrd.pdf'%(date_str)) 
 #%%
 #plot and save lineout of strain XRD
-lineout_strain = strain[2]
-lineout_xx = np.linspace(0,extent_microns_cut[1],len(lineout_strain))
-
-plt.figure()
-plt.plot(lineout_xx,strain[2])#bf_map[2,start_cutXat:cutXat])#strain[1])
-plt.plot(lineout_xx,bf_map[2,start_cutXat:cutXat]/bf_map[2,start_cutXat:cutXat].max())
-plt.title('Strain and BF lineout')
-
-#np.save(r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_May2020\Analysis\scans429_503\XRD\20220405_lineout_XRD',lineout_strain)
+#lineout_strain = strain[2]
+#lineout_xx = np.linspace(0,extent_microns_cut[1],len(lineout_strain))
+#
+#plt.figure()
+#plt.plot(lineout_xx,strain[2])#bf_map[2,start_cutXat:cutXat])#strain[1])
+#plt.plot(lineout_xx,bf_map[2,start_cutXat:cutXat]/bf_map[2,start_cutXat:cutXat].max())
+#plt.title('Strain and BF lineout')
+#
+##np.save(r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_May2020\Analysis\scans429_503\XRD\20220405_lineout_XRD',lineout_strain)
 #np.save(r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_May2020\Analysis\scans429_503\XRD\20220405_lineout_xx',lineout_xx)  
 
 
@@ -509,10 +510,10 @@ mean_absq = np.nanmean(q_map_temp)
 print( 'Mean |q| value in the masked map' )
 print( mean_absq)
 
-plt.figure()
-plt.title('Mean |q| is: %f '%mean_absq )
-plt.imshow(q_map_temp); plt.colorbar()
-#plt.savefig('C:/Users/Sanna/Documents/Beamtime/NanoMAX062017/Analysis_ptypy/scan461_/scanningXRD_InP/%s_xrd_with_mean_qabs_value.pdf'%(date_str)) 
-plt.figure()
-plt.title('lattice constant a')
-plt.imshow(a_lattice_exp[:,start_cutXat:cutXat]); plt.colorbar()
+#plt.figure()
+#plt.title('Mean |q| is: %f '%mean_absq )
+#plt.imshow(q_map_temp); plt.colorbar()
+##plt.savefig('C:/Users/Sanna/Documents/Beamtime/NanoMAX062017/Analysis_ptypy/scan461_/scanningXRD_InP/%s_xrd_with_mean_qabs_value.pdf'%(date_str)) 
+#plt.figure()
+#plt.title('lattice constant a')
+#plt.imshow(a_lattice_exp[:,start_cutXat:cutXat]); plt.colorbar()
