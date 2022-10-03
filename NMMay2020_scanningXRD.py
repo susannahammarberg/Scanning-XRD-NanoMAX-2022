@@ -31,8 +31,9 @@ diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s387-41
 #data should be saved as [position,angle,dety,detx]
 
 #'20220920_1211_allpeaks.npy offset
-y_offset = 8
-x_offset = -8
+# offset is the difference between the center of the diffraction roi and the center of the calibrated (0,0) point on the detector
+y_offset = -8
+x_offset = 8
 
 #extra cropping
 #diff_data = diff_data[:,:,0:220]
@@ -97,7 +98,7 @@ class Geometry:
 #%% 
 ##### Input parameters
    #for now shape is rotations, detx, dety
-g = Geometry((0.1, 55*1E-6, 55*1E-6), shape=(diff_data.shape[1], diff_data.shape[3], diff_data.shape[2]), energy=15.0, distance=0.30495, theta_bragg=7.9)
+g = Geometry((0.1, 55*1E-6, 55*1E-6), shape=(diff_data.shape[1], diff_data.shape[3], diff_data.shape[2]), energy=15.0, distance=0.30495, theta_bragg=8.22)
 dx = dy = 60e-9
 nbr_rows = 24#51
 nbr_cols = 131#131#128#131
@@ -149,7 +150,7 @@ print('***XRD analysis***')
 #coordinate system is defined so that data should be sorted with (position,rotation (lower to hiugher theta),det x, det y)
 #TODO change to more logical (y,x) 
 # and also, y does not have to be defined as neg now
-diff_data = np.rot90(diff_data,k=-1, axes=(2, 3))
+diff_data = np.fliplr(np.rot90(diff_data,k=-1, axes=(2, 3)))
 
 
 # Function defines q1 q2 q3 + q_abs from the geometry function 
@@ -160,13 +161,14 @@ def def_q_vectors():
     q_abs = 4 * np.pi / g.wavelength * g.sintheta()
     
     #offset from calibrated detector center
-    q1 = np.linspace(-g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*x_offset, g.dq1*g.shape[1]/2.+q_abs/g.costheta() +g.dq1*x_offset, g.shape[1]) # ~z
+    # off set should be positive, naaa
+    q1 = np.linspace(-g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*x_offset, g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*x_offset, g.shape[1]) # ~z
     
     # q3 defined as centered around 0, that means adding the component from q1
     q3 = np.linspace(-g.dq3*g.shape[0]/2. + g.sintheta()*q1.min() , g.dq3*g.shape[0]/2.+ g.sintheta()*q1.max(), g.shape[0]) #~x       
     #offset from calibrated detector center
     # neg offset just because of how i rotated the dataset now with lower y to the left
-    q2 = np.linspace(-g.dq2*g.shape[2]/2. - g.dq2*y_offset, g.dq2*g.shape[2]/2. - g.dq2*y_offset, g.shape[2]) #        ~y
+    q2 = np.linspace(-g.dq2*g.shape[2]/2. + g.dq2*y_offset, g.dq2*g.shape[2]/2. + g.dq2*y_offset, g.shape[2]) #        ~y
     
 def_q_vectors()
 
@@ -449,7 +451,7 @@ ax[1].set_ylabel(r'$\mu$m')
 ax[1].set_xticks([])
 divider = make_axes_locatable(ax[1])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img1, cax=cax, ticks=(2.975E-10, 3.0E-10, 3.025E-10, 3.05E-10, 3.075E-10, 3.10E-10))
+cb = plt.colorbar(img1, cax=cax, ticks=(2.900E-10,2.940E-10,2.980E-10))
 
 #tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
 
@@ -483,6 +485,7 @@ divider = make_axes_locatable(ax[3])
 cax = divider.append_axes("right", size="5%", pad=0.05)
 cb = plt.colorbar(img3, cax=cax)#, ticks=(-6, -3, 0 ))
 
+plt.show()
 #tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator; po.update_ticks()
 
 #plt.savefig('C:/Users/Sanna/Documents/Beamtime/NanoMAX062017/Analysis_ptypy/scan461_/scanningXRD_InGaP/%s_xrd'%(date_str))

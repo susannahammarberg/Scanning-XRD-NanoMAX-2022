@@ -35,7 +35,7 @@ scans = np.arange(387,411+1).tolist()# , np.arange(491,503) , np.arange(465,491)
 #raw_slicey = slice(0,270)
 #raw_slicex = slice(250,-1)
 
-det_ceny = 92 #defined not from Si calibration cos its too far off. using the center of uncoated NW instead. 
+det_ceny = 92 #defined not from Si calibration. (Merlin fliped upsidedown).Its too far off, using the center of uncoated NW instead. 
 det_cenx = 233 # defined from Si calibration
 
 #smaller but all peaks
@@ -117,6 +117,8 @@ data = data * mask_Merlin[raw_slicey,raw_slicex]
 
 #reshape data to [position,angle,det1,det2]
 data= np.swapaxes(data, 0,1)
+
+#Flip the merlin images up-side-down
 
 #%%TEMP REMOVE later
 savepath_bf = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\bf\shifted\peak1'
