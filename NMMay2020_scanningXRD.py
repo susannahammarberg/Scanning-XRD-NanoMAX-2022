@@ -24,7 +24,7 @@ print('***Load data np file***')
 
 savepath = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\scanningXRD\unshifted/'
 savepath_bf = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\bf\shifted'
-array = '20220920_1211_allpeaks.npy' # remove ths'20220916_1419.npy' #'20220916_1140.npy'
+array = '20221003_1209_allpeaks.npy' # remove ths'20220916_1419.npy' #'20220916_1140.npy'
 # load diffraction data
 diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s387-411/'+array)
 
@@ -32,7 +32,7 @@ diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s387-41
 
 #'20220920_1211_allpeaks.npy offset
 # offset is the difference between the center of the diffraction roi and the center of the calibrated (0,0) point on the detector
-y_offset = -8
+y_offset = 8
 x_offset = 8
 
 #extra cropping
@@ -307,7 +307,7 @@ def XRD_analysis():
                 
                 # it might be plotting like 1 pixel of, but in x that is pretty important. that is why i am plotting 3 rotations. be
                 #because the COM is not finding the COM-pixel it is finding just the COM coordinate in the mesh
-                for iii in range(-2,3,2):  
+                for iii in range(-2,3,3):  
                     #import pdb; pdb.set_trace()
 #                    fig, ax = plt.subplots(ncols=3)
 #                    ax[0].plot(sum(sum(data_orth_coord)))
@@ -344,8 +344,8 @@ XRD_qx, XRD_qz, XRD_qy, data_orth_coord = XRD_analysis() # units of 1/m
 #----------------------------------------------------------
 
 XRD_absq =  np.sqrt(XRD_qx**2 + XRD_qy**2 + XRD_qz**2)
-XRD_alpha = np.arcsin( XRD_qy/ XRD_absq)
-XRD_beta  = np.arctan( XRD_qx / XRD_qz)
+XRD_alpha = np.rad2deg(np.arcsin( XRD_qy/ XRD_absq))
+XRD_beta  = np.rad2deg(np.arctan( XRD_qx / XRD_qz))
 
 
 #%%
@@ -378,7 +378,7 @@ class Formatter(object):
         z = self.im.get_array()[int(y), int(x)]
         return 'x=%i, y=%i, z=%1.4f' % (x, y, z)
     
-  
+#%%  
 #def plot_XRD_polar():    
 # cut the images in x-range:start from the first pixel: 
 start_cutXat = 0
@@ -451,15 +451,15 @@ ax[1].set_ylabel(r'$\mu$m')
 ax[1].set_xticks([])
 divider = make_axes_locatable(ax[1])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img1, cax=cax, ticks=(2.900E-10,2.940E-10,2.980E-10))
+cb = plt.colorbar(img1, cax=cax, ticks=(2.860E-10,2.900E-10,2.940E-10,2.980E-10))
 
 #tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
 
 #plt.subplot(413)
 norm3 = DivergingNorm( vcenter=0)
-img2 = ax[2].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_alpha[:cutYat,start_cutXat:cutXat], cmap='coolwarm', interpolation='none',extent=extent_microns_cut, norm=norm3) 
+img2 = ax[2].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_alpha[:cutYat,start_cutXat:cutXat], cmap='coolwarm', interpolation='none',extent=extent_microns_cut, norm=norm3) 
 # cut in extent_motorposition. x-pixel nbr 67 is at 2.0194197798363955
-ax[2].set_title(r'$\alpha$ (mrad)', loc='left', pad =-12)
+ax[2].set_title(r'$\alpha$ (deg)', loc='left', pad =-12)
 ax[2].set_ylabel(r'$\mu$m')
 ax[2].set_xticks([])
 divider = make_axes_locatable(ax[2])
@@ -473,9 +473,9 @@ tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_
    
 #plt.subplot(414)
 norm4 = DivergingNorm( vcenter=0)
-img3 = ax[3].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*1E3*XRD_beta[:cutYat,start_cutXat:cutXat], cmap='bwr',interpolation='none',extent=extent_microns_cut, norm=norm4) 
+img3 = ax[3].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_beta[:cutYat,start_cutXat:cutXat], cmap='bwr',interpolation='none',extent=extent_microns_cut, norm=norm4) 
 plt.setp(ax[3].xaxis.get_majorticklabels(), rotation=70 )
-ax[3].set_title('$\\beta$ (mrad)', loc='left', pad =-12)
+ax[3].set_title('$\\beta$ (deg)', loc='left', pad =-12)
 #ax[3].set_xticks([])
 #plt.ylabel(r'$y$ [$\mathrm{\mu}$m]')
 #plt.xlabel(r'$x$ [$\mathrm{\mu m}$]') 

@@ -40,12 +40,12 @@ scans = [397]
 x_cen = 233 # defined from Si calibration
 #y_cen = 92 #defined not from Si calibration cos its too far off. using the center of uncoated NW instead. 
 #choose roi on detetor
-
+#all peaks 
 raw_slicey = slice(50,150)
 raw_slicex = slice(150,300)
-
-#raw_slicey = slice(20,180)
-#raw_slicex = slice(150,300)
+# peak 1
+raw_slicey = slice(20,160)
+raw_slicex = slice(150,208)
  
 position_roi = np.arange(2000,3000,20)    #upp till 2000 väldigt lite från 3000 också lite
 
@@ -55,8 +55,8 @@ for rot_nbr, scan in enumerate(scans):
     with h5py.File(datapath + '000' + str(scan) +'.h5','r' ) as fp:
         print('loading scan ' + str(scan))
 
-        #data.append(np.array(fp['entry/measurement/merlin/frames'][position_roi,raw_slicey,raw_slicex]))
-        data.append(np.array(fp['entry/measurement/merlin/frames'][position_roi]))
+        data.append(np.array(fp['entry/measurement/merlin/frames'][position_roi,raw_slicey,raw_slicex]))
+        #data.append(np.array(fp['entry/measurement/merlin/frames'][position_roi]))
         #rocking_curve.append(np.sum(data*mask_Merlin[frames_in_roi,raw_slicey,raw_slicex]))
         #gonphi = np.array(fp['entry/snapshot/gonphi'])
         #gonphis.append(gonphi)
@@ -67,9 +67,9 @@ for rot_nbr, scan in enumerate(scans):
 with h5py.File(maskpath  + mask_file_name,'r' ) as fp:
     mask_Merlin = np.array(fp['mask'])
 
-#apply mask
-#data = data * mask_Merlin[raw_slicey,raw_slicex]        
-data = data * mask_Merlin        
+#apply mask and (remember that Merlin should be flipped upside down). 
+data = data * mask_Merlin[raw_slicey,raw_slicex]        
+#data = data * mask_Merlin        
 
 #reshape data to [position,angle,det1,det2]
 #data= np.swapaxes(data, 0,1)
@@ -80,7 +80,7 @@ data = data * mask_Merlin
 #print(savepath)
 print('Shape of data is: ', np.array(data).shape)
 plt.figure()
-plt.imshow(np.log10(sum((data[rot_nbr]))),cmap='jet', interpolation='none')
+plt.imshow(np.log10((sum((data[rot_nbr])))),cmap='jet', interpolation='none')
 plt.title('Summed intensity for all rotations (log)')
 plt.colorbar()
 #plt.savefig(savepath + 'diffraction')

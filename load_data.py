@@ -32,15 +32,19 @@ datapath = r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_raw_selection\s387_411/'
 scans = np.arange(387,411+1).tolist()# , np.arange(491,503) , np.arange(465,491) ])
 
 #choose roi on detetor
-#raw_slicey = slice(0,270)
-#raw_slicex = slice(250,-1)
+# all peaks
+#TODO save with raoi in y same as peak1
+#raw_slicey = slice(50,150) #(defined for Merlin raw data not flipud)
+#raw_slicex = slice(150,300)
 
-det_ceny = 92 #defined not from Si calibration. (Merlin fliped upsidedown).Its too far off, using the center of uncoated NW instead. 
+# peak 1
+raw_slicey = slice(20,160)
+raw_slicex = slice(150,208)
+
+
+det_ceny = 92 #defined not from Si calibration. (Merlin not fliped upsidedown). using the center of uncoated NW  (peak1) instead. 
 det_cenx = 233 # defined from Si calibration
 
-#smaller but all peaks
-raw_slicey = slice(50,150) #(defined for Merlin raw data not flipud)
-raw_slicex = slice(150,300)
 
 #for all peaks analysis
 y_cen = raw_slicey.start + int((raw_slicey.stop-raw_slicey.start)/2) 
@@ -50,7 +54,7 @@ x_cen = raw_slicex.start + int((raw_slicex.stop-raw_slicex.start)/2)
 #calculate offset in x and y: (in pixels)
 #TODO save metadata as file with  save with np data. save metadata. roi, etc etc
 # om roi-mitten är till vänster om calibrerat center ska offset varar positiv
-y_offset = det_ceny - y_cen 
+y_offset = -(det_ceny - y_cen ) #change sign because merlin is flipped upside down
 x_offset = det_cenx - x_cen 
 
 #PEAK 1
@@ -116,9 +120,9 @@ with h5py.File(maskpath  + mask_file_name,'r' ) as fp:
 data = data * mask_Merlin[raw_slicey,raw_slicex]        
 
 #reshape data to [position,angle,det1,det2]
-data = np.swapaxes(data, 0,1)
+data = np.swapaxes(data, 0, 1)
 
-#plt.figure(); plt.imshow(sum(sum(data)))
+#plt.figure(); plt.imshow(sum(sum(data)), cmap='jet')
 
 #Flip the merlin images up-side-down
 data = np.flip(data, axis = 2)
