@@ -39,7 +39,7 @@ det_ceny = 92 #defined not from Si calibration. (Merlin fliped upsidedown).Its t
 det_cenx = 233 # defined from Si calibration
 
 #smaller but all peaks
-raw_slicey = slice(50,150)
+raw_slicey = slice(50,150) #(defined for Merlin raw data not flipud)
 raw_slicex = slice(150,300)
 
 #for all peaks analysis
@@ -49,9 +49,9 @@ x_cen = raw_slicex.start + int((raw_slicex.stop-raw_slicex.start)/2)
 #offset of diffraction centers from hte caliubrated detector centers
 #calculate offset in x and y: (in pixels)
 #TODO save metadata as file with  save with np data. save metadata. roi, etc etc
-# should be verse versa? om peak är till höger om calibrerat center ska offset varar positiv
-y_offset = y_cen - det_ceny
-x_offset = x_cen - det_cenx
+# om roi-mitten är till vänster om calibrerat center ska offset varar positiv
+y_offset = det_ceny - y_cen 
+x_offset = det_cenx - x_cen 
 
 #PEAK 1
 #raw_slicey = slice(20,180)
@@ -116,49 +116,14 @@ with h5py.File(maskpath  + mask_file_name,'r' ) as fp:
 data = data * mask_Merlin[raw_slicey,raw_slicex]        
 
 #reshape data to [position,angle,det1,det2]
-data= np.swapaxes(data, 0,1)
+data = np.swapaxes(data, 0,1)
+
+#plt.figure(); plt.imshow(sum(sum(data)))
 
 #Flip the merlin images up-side-down
-
-#%%TEMP REMOVE later
-savepath_bf = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\bf\shifted\peak1'
-dx = dy = 60e-9
-nbr_rows = int(data.shape[0]/Nx_new)#51
-nbr_cols = Nx_new#131#128#131
-
-extent_microns = [ 0, dx*(nbr_cols-1)*1E6,0, dy*(nbr_rows-1)*1E6]
+data = np.flip(data, axis = 2)
 
 
-print('***BF analysis***')
-# function for calculating bright field of data
-# input is the data as a 3D array with dimension data[scans_y * scans_x][yPixels][xPixels]
-def bright_field(data,y,x):
-    index = 0
-    photons = np.zeros((y,x)) 
-    for row in range(0,y):
-        for col in range(0,x):
-            photons[row,col] = np.sum(data[index]) #/ max_intensity
-            
-            #fig, ax = plt.subplots(nrows=1)
-            #ax.imshow(np.log10(photons),cmap = 'jet', interpolation='none', extent= [ 0, (x-1)*50E-3,(y-1)*50E-3,0 ])
-            #plt.setp(ax, ylabel=r'y [$\mu$m]', xlabel=r'z [$\mu$m]',title=r'Bright field #S440 Position %d'%index)
-            ##plt.savefig(r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_May2020\Analysis\scans429_503\BF_maps\before_shifting\updated_20210609\S#440_pos%s'%("{0:03}".format(index))) 
-            index = index+1
-            #print(index)
-    return photons
-
-for scan in range(data.shape[1]):
-    bf_map = bright_field((data[:,scan]),nbr_rows,nbr_cols)
-    #bf_map = bright_field(np.sum((data[:,:]),axis=1),nbr_rows,nbr_cols)
-    
-    fig, ax = plt.subplots(nrows=1)
-    ax.imshow(np.log10(bf_map),cmap = 'jet', interpolation='none', extent= extent_microns)
-    plt.hlines(y=0.6, xmin=0, xmax=6.44)#, colors=', linestyles)
-    plt.setp(ax, ylabel=r'y [$\mu$m]', xlabel=r'x [$\mu$m]')#,title=r'Bright field' 3d?
-    plt.show()
-    #plt.savefig(savepath_bf+ r'\rot%d'%scan)
-#print(r'bf saved to ')
-#print(savepath_bf)
 #%%
 #Save diffraction data
 np.save(savepath+ date_str, data)
