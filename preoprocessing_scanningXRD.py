@@ -1,3 +1,4 @@
+
 """
 
  2022 09 07
@@ -30,24 +31,40 @@ mask_file_name = 'merlin_mask_190222_14keV.h5'
 
 #datapath = 'E:/Jesper_beamtimes/NanoMAX_May2022/20211260/2022051808/raw/sample/'
 datapath = 'C:/Users/Sanna/NanoMAX_May2022_Perovskites_raw_selection/s387_411/'
+datapath = 'C:/Users/Sanna/NanoMAX_May2022_Perovskites_raw_selection/s288_308/'
 
 #%%
 
 scans = np.arange(387,411+1).tolist()#[387,411]#,397]#np.concatenate( [ np.arange(429,453) , np.arange(491,503) , np.arange(465,491) ])
-scans = [397] 
+scans = np.arange(288,308+1).tolist() # reference nw
+scans = [298] 
 
 # center on detector y and x is 286,233 (that is center of delta and gamma 0.)
 x_cen = 233 # defined from Si calibration
 #y_cen = 92 #defined not from Si calibration cos its too far off. using the center of uncoated NW instead. 
 #choose roi on detetor
-#all peaks 
+#NW1 all peaks 
 raw_slicey = slice(50,150)
 raw_slicex = slice(150,300)
-# peak 1
+# NW1 peak 1
 raw_slicey = slice(20,160)
 raw_slicex = slice(150,208)
- 
-position_roi = np.arange(2000,3000,20)    #upp till 2000 väldigt lite från 3000 också lite
+
+#ref NW
+# center (190,24)
+raw_slicey = slice(190-60,190+60)
+raw_slicex = slice(175-40,175+40)
+
+#NW1 
+#position_roi = np.arange(2000,3000,20)   #upp till 2000 väldigt lite från 3000 också lite
+
+
+
+#ref_NW
+position_roi = np.arange(6000,10000,1)  
+
+#position_roi = np.arange(0,-1)  
+
 
 data = []
 for rot_nbr, scan in enumerate(scans):
@@ -55,8 +72,8 @@ for rot_nbr, scan in enumerate(scans):
     with h5py.File(datapath + '000' + str(scan) +'.h5','r' ) as fp:
         print('loading scan ' + str(scan))
 
-        data.append(np.array(fp['entry/measurement/merlin/frames'][position_roi,raw_slicey,raw_slicex]))
-        #data.append(np.array(fp['entry/measurement/merlin/frames'][position_roi]))
+        #data.append(np.array(fp['entry/measurement/merlin/frames'][position_roi,raw_slicey,raw_slicex]))
+        data.append(np.array(fp['entry/measurement/merlin/frames'][position_roi]))
         #rocking_curve.append(np.sum(data*mask_Merlin[frames_in_roi,raw_slicey,raw_slicex]))
         #gonphi = np.array(fp['entry/snapshot/gonphi'])
         #gonphis.append(gonphi)
@@ -80,12 +97,18 @@ data = data * mask_Merlin[raw_slicey,raw_slicex]
 #print(savepath)
 print('Shape of data is: ', np.array(data).shape)
 plt.figure()
-plt.imshow(np.log10((sum((data[rot_nbr])))),cmap='jet', interpolation='none')
-plt.title('Summed intensity for all rotations (log)')
+plt.imshow(np.log10((sum(sum(data)))),cmap='jet', interpolation='none')
+plt.title('Summed intensity for single rotation (log)')
 plt.colorbar()
 #plt.savefig(savepath + 'diffraction')
 plt.show()
 
+#%%
+plt.figure(); plt.imshow(np.log10(data[0,6506]))
+#%%
+#"position rocking "curve"
+pos_int = np.sum(np.sum(np.sum(data,axis=0),axis=1),axis=1)
+plt.figure(); plt.plot(pos_int); plt.xlabel('position'); plt.ylabel('intensity')
 #%%
 #plot all frames in one scan
 for pos_nbr, position in enumerate(position_roi.tolist()):

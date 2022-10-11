@@ -22,25 +22,38 @@ print('***Load data np file***')
 #matplotlib.use( 'Qt5agg' )
 
 
-savepath = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\scanningXRD\unshifted/'
-savepath_bf = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\bf\shifted'
-array = '20221003_1209_allpeaks.npy' # remove ths'20220916_1419.npy' #'20220916_1140.npy'
+#savepath = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\scanningXRD\unshifted/'
+#savepath_bf = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\NW1\bf\shifted'
+savepath = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\refNW\scanningXRD\unshifted/'
+savepath_bf = r'C:\Users\Sanna\Documents\Beamtime\NanoMAX_Lucas_PerovNW_may2022\analysis\refNW\bf\shifted'
+
+array = '20221010_1210.npy' #'20221005_1113.npy'#'20221005_1113.npy'#20221003_1352_peak1.npy' # 20221003_1209_allpeaks.npy' #20221003_1352_peak1.npy' # 20221003_1209_allpeaks.npy' # remove ths'20220916_1419.npy' #'20220916_1140.npy'
 # load diffraction data
-diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s387-411/'+array)
+#diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s387-411/'+array)
+diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s288-308/'+array)
 
 #data should be saved as [position,angle,dety,detx]
 
-#'20220920_1211_allpeaks.npy offset
-# offset is the difference between the center of the diffraction roi and the center of the calibrated (0,0) point on the detector
-y_offset = 8
-x_offset = 8
+# offset is the difference between the center of the diffraction roi and the center of the calibrated (0,0) point on the detector (in pixels)
+#allpeaks: (8,8)
+#y_offset = 8 
+#x_offset = 8
+
+#peak1
+#y_offset = -2 
+#x_offset = -54
+
+##all peaks no offset in x
+y_offset = 0# 8 
+z_offset = -58# (x on the detector)
+x_offset = 
 
 #extra cropping
 #diff_data = diff_data[:,:,0:220]
 
 #plot raw data
 plt.figure()
-plt.imshow(np.log10(sum(sum(diff_data))),cmap='magma', interpolation='none')
+plt.imshow((sum(sum(diff_data))),cmap='jet', interpolation='none')
 plt.title('All data')
 #plt.savefig('all_diffraction_%s'%date_str)
 plt.colorbar()
@@ -54,15 +67,16 @@ ax[1].imshow(np.log10(sum((diff_data[:,-1]))),cmap='jet', interpolation='none')
 ax[0].set_ylabel('q1 qz ')
 ax[0].set_xlabel('q2 qy ')
 ax[1].set_xlabel('q2 qy ')
-plt.suptitle('First index S#489 (left) and last index S#429 (right) of data array (along qx) ')
+plt.suptitle('First index  (left) and last index (right) of data array (along qx) ')
 
 #             (qx, qz, qy), or (q3, q1, q2).
 
 rocking_curve = sum(np.sum(np.sum(diff_data, axis=-1),axis=-1))
 
 plt.figure()
-plt.plot(rocking_curve)
-plt.title('Rocking curve for all diffraction S(387-411)')            
+plt.plot(rocking_curve,'-*')
+#plt.title('Rocking curve for all diffraction S(387-411)')            
+#plt.title('Rocking curve for all diffraction S(387-411)')            
 plt.show()
 
 
@@ -98,10 +112,10 @@ class Geometry:
 #%% 
 ##### Input parameters
    #for now shape is rotations, detx, dety
-g = Geometry((0.1, 55*1E-6, 55*1E-6), shape=(diff_data.shape[1], diff_data.shape[3], diff_data.shape[2]), energy=15.0, distance=0.30495, theta_bragg=8.22)
+g = Geometry((0.1, 55*1E-6, 55*1E-6), shape=(diff_data.shape[1], diff_data.shape[3], diff_data.shape[2]), energy=15.0, distance=0.30495, theta_bragg=8.082 ) #8.2   8.5 for gamme=0# 8.22 for peak1)
 dx = dy = 60e-9
-nbr_rows = 24#51
-nbr_cols = 131#131#128#131
+nbr_rows = 15#24
+nbr_cols = 190#131
 
 extent_microns = [ 0, dx*(nbr_cols-1)*1E6,0, dy*(nbr_rows-1)*1E6]
 
@@ -150,8 +164,12 @@ print('***XRD analysis***')
 #coordinate system is defined so that data should be sorted with (position,rotation (lower to hiugher theta),det x, det y)
 #TODO change to more logical (y,x) 
 # and also, y does not have to be defined as neg now
-diff_data = np.fliplr(np.rot90(diff_data,k=-1, axes=(2, 3)))
-
+plt.figure();  plt.imshow(np.log10(sum((diff_data[:,10]))), cmap='jet')
+diff_data = (np.rot90(diff_data,k=-1, axes=(2, 3)))
+#TODO not sure about this
+diff_data=np.flip(diff_data, axis=3) 
+#diff_data = np.fliplr(np.rot90(diff_data,k=-1, axes=(2, 3)))
+plt.figure();  plt.imshow(np.log10(sum((diff_data[:,10]))), cmap='jet')
 
 # Function defines q1 q2 q3 + q_abs from the geometry function 
 # (See "Bending and tilts in NW..." ppt)
@@ -160,11 +178,15 @@ def def_q_vectors():
     #  units of reciprocal meters [m-1]
     q_abs = 4 * np.pi / g.wavelength * g.sintheta()
     
-    #offset from calibrated detector center
-    # off set should be positive, naaa
-    q1 = np.linspace(-g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*x_offset, g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*x_offset, g.shape[1]) # ~z
+    #offset is from calibrated detector center
     
-    # q3 defined as centered around 0, that means adding the component from q1
+    #TODO if the bragg peak (which you used to define theta) is not in the cetner of the diffraction roi, then you need an offset. but not from the calibrated center
+    #of the detector. Just the offset from the cropped diffraction image to the point that defines theta)
+    #q1 = np.linspace(-g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*z_offset, g.dq1*g.shape[1]/2.+q_abs/g.costheta() + g.dq1*z_offset, g.shape[1]) # ~z
+    q1 = np.linspace(-g.dq1*g.shape[1]/2.+q_abs/g.costheta() , g.dq1*g.shape[1]/2.+q_abs/g.costheta() , g.shape[1]) # ~z
+    # qx defined as centered around 0, that means adding the component from q1 (check Qx definition below)
+    #TODO add +offset in x, if the rocking curve is not centered around the rocking curve maximum.
+    #x_offset
     q3 = np.linspace(-g.dq3*g.shape[0]/2. + g.sintheta()*q1.min() , g.dq3*g.shape[0]/2.+ g.sintheta()*q1.max(), g.shape[0]) #~x       
     #offset from calibrated detector center
     # neg offset just because of how i rotated the dataset now with lower y to the left
@@ -220,7 +242,7 @@ plt.show()
 #test of orientations
 fig, ax = plt.subplots(ncols=1) # figsize=(10,3)
 ax.imshow(np.log10(sum((diff_data[:,0]))),cmap='jet', interpolation='none')
-tick_interval = 10
+tick_interval = 15
 plt.yticks(range(0,len(qz),tick_interval), np.round(qz[::tick_interval]*1E-10,2))
 plt.xticks(range(0,len(qy),tick_interval), np.round(qy[::tick_interval]*1E-8,2))
 ax.set_ylabel('q1 qz [Å-1]')
@@ -288,49 +310,49 @@ def XRD_analysis():
             
             position_idx += 1
             
-            ###plot every other 3d peak and print out the postion of the COM analysis
-            #if (position_idx%100==0 and position_idx<501):
-            if (position_idx==134 or position_idx==139 or position_idx==161): # 
-                #import pdb; pdb.set_trace()
-                # TODO very har to say anything about this looking in 2d, need 3d plots!
-                #TODO plot the right position in 3D, that is look at the correct slice           
-                x_p = np.argwhere(qx>COM_qx)[0][0]
-                y_p = np.argwhere(qy<COM_qy)[0][0] #take the first value in qy where
-                z_p = np.argwhere(qz>COM_qz)[0][0]  
-                #import pdb; pdb.set_trace()
-                
-                print('figure')
-                print(COM_qx*1E-7,np.round(COM_qz*1E-10,3),np.round(COM_qy*1E-8,3))
-                print('x_p is', x_p)
-                print('z_p',z_p)                
-                print('y_p is', y_p)
-                
-                # it might be plotting like 1 pixel of, but in x that is pretty important. that is why i am plotting 3 rotations. be
-                #because the COM is not finding the COM-pixel it is finding just the COM coordinate in the mesh
-                for iii in range(-2,3,3):  
-                    #import pdb; pdb.set_trace()
-#                    fig, ax = plt.subplots(ncols=3)
-#                    ax[0].plot(sum(sum(data_orth_coord)))
-#                    ax[1].plot(np.sum(sum(data_orth_coord),axis=1))
-#                    ax[2].plot(np.sum(np.sum(data_orth_coord,axis=1),axis=1))
-  
-                    #print(np.sum(data_orth_coord[x_p+iii]))
-                    fig, ax = plt.subplots(ncols=1) # figsize=(10,3)
-                    plt.imshow(np.log10(sum(data_orth_coord)), cmap='jet')
-                    plt.colorbar()
-                    plt.setp(ax.xaxis.get_majorticklabels(), rotation=70)
-                    tick_interval = 10
-                    plt.yticks(range(0,len(qz),tick_interval), np.round(qz[::tick_interval]*1E-10,3))
-                    plt.xticks(range(0,len(qy),tick_interval), np.round(qy[::tick_interval]*1E-8,3))
-                    ax.set_ylabel('q1 qz [Å-1]')
-                    ax.set_xlabel('q2 qy [*10^8 m-1]')
-                    
-                    # Find the coordinates of that cell closest to this value:              
-                    plt.scatter(y_p, z_p, s=500, c='red', marker='x')
-                    #plt.scatter(COM_qy, COM_qz, s=500, c='red', marker='x')
-                    #plt.axhline(y=z_p,color='red')
-                    #plt.axvline(x=y_p,color='yellow')
-                    plt.title('pos%d'%position_idx)
+#            ###plot every other 3d peak and print out the postion of the COM analysis
+#            #if (position_idx%100==0 and position_idx<501):
+#            if (position_idx==134 or position_idx==139 or position_idx==161): # 
+#                #import pdb; pdb.set_trace()
+#                # TODO very har to say anything about this looking in 2d, need 3d plots!
+#                #TODO plot the right position in 3D, that is look at the correct slice           
+#                x_p = np.argwhere(qx>COM_qx)[0][0]
+#                y_p = np.argwhere(qy<COM_qy)[0][0] #take the first value in qy where
+#                z_p = np.argwhere(qz>COM_qz)[0][0]  
+#                #import pdb; pdb.set_trace()
+#                
+#                print('figure')
+#                print(COM_qx*1E-7,np.round(COM_qz*1E-10,3),np.round(COM_qy*1E-8,3))
+#                print('x_p is', x_p)
+#                print('z_p',z_p)                
+#                print('y_p is', y_p)
+#                
+#                # it might be plotting like 1 pixel of, but in x that is pretty important. that is why i am plotting 3 rotations. be
+#                #because the COM is not finding the COM-pixel it is finding just the COM coordinate in the mesh
+#                for iii in range(-2,3,4):  
+#                    #import pdb; pdb.set_trace()
+##                    fig, ax = plt.subplots(ncols=3)
+##                    ax[0].plot(sum(sum(data_orth_coord)))
+##                    ax[1].plot(np.sum(sum(data_orth_coord),axis=1))
+##                    ax[2].plot(np.sum(np.sum(data_orth_coord,axis=1),axis=1))
+#  
+#                    #print(np.sum(data_orth_coord[x_p+iii]))
+#                    fig, ax = plt.subplots(ncols=1) # figsize=(10,3)
+#                    plt.imshow(np.log10(sum(data_orth_coord)), cmap='jet')
+#                    plt.colorbar()
+#                    plt.setp(ax.xaxis.get_majorticklabels(), rotation=70)
+#                    tick_interval = 10
+#                    plt.yticks(range(0,len(qz),tick_interval), np.round(qz[::tick_interval]*1E-10,3))
+#                    plt.xticks(range(0,len(qy),tick_interval), np.round(qy[::tick_interval]*1E-8,3))
+#                    ax.set_ylabel('q1 qz [Å-1]')
+#                    ax.set_xlabel('q2 qy [*10^8 m-1]')
+#                    
+#                    # Find the coordinates of that cell closest to this value:              
+#                    plt.scatter(y_p, z_p, s=500, c='red', marker='x')
+#                    #plt.scatter(COM_qy, COM_qz, s=500, c='red', marker='x')
+#                    #plt.axhline(y=z_p,color='red')
+#                    #plt.axvline(x=y_p,color='yellow')
+#                    plt.title('pos%d'%position_idx)
 
     return XRD_qx, XRD_qz, XRD_qy, data_orth_coord
 
@@ -378,15 +400,15 @@ class Formatter(object):
         z = self.im.get_array()[int(y), int(x)]
         return 'x=%i, y=%i, z=%1.4f' % (x, y, z)
     
-#%%  
+#%% 
 #def plot_XRD_polar():    
 # cut the images in x-range:start from the first pixel: 
-start_cutXat = 0
+start_cutXat = 20
 
 # replace the x-scales end-postion in extent_motorposition. 
 extent_motorpos_cut = np.copy(extent_microns)
 
-cutXat = -1   
+cutXat = -25   
 cutYat = -1
 
 #extent_microns_cut = [origin[0]*1E6, origin[0]*1E6 + dx*(cutXat-start_cutXat)*1E6, origin[1]*1E6, origin[1]*1E6+dy*(cutYat)*1E6]
@@ -425,9 +447,10 @@ XRD_mask = np.ones((XRD_mask.shape))
 #plt.subplot(412)   
 #calculate lattice constant c from |q|:       
 d =  2*np.pi/  XRD_absq
-c_lattice_exp = d * np.sqrt(3)   
+c_lattice_exp = d * 4.0   
 
 d_teor =2.93975e-10 #004
+c_lattice_exp_theor = d_teor * 4.0 #np.sqrt(H**2+K**2+L**2)
 
 #print 'mean lattice constant is %d' %np.mean(a_lattice_exp)
 #imshow(a_lattice_exp)
@@ -440,7 +463,7 @@ d_teor =2.93975e-10 #004
 #strain = 100*XRD_mask[:cutYat,start_cutXat:cutXat]*(( a_table - a_lattice_exp[:cutYat,start_cutXat:cutXat] )/a_lattice_exp[:cutYat,start_cutXat:cutXat])
 
 norm2 = DivergingNorm( vcenter=0)
-img1 = ax[1].imshow(d, cmap=colormap, interpolation='none', extent=extent_microns_cut)#
+img1 = ax[1].imshow(d[:cutYat,start_cutXat:cutXat], cmap=colormap, interpolation='none', extent=extent_microns_cut)#
 #plt.imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*a_lattice_exp[:cutYat,start_cutXat:cutXat], cmap='jet',interpolation='none')#,extent=extent_motorpos_cut) 
 #plt.imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_absq[:cutYat,start_cutXat:cutXat]*1E-8, cmap=colormap,interpolation='none',extent=extent_motorpos_cut) 
 #plt.title('Length of Q-vector |Q|)', loc='left', pad =-12)
@@ -451,20 +474,23 @@ ax[1].set_ylabel(r'$\mu$m')
 ax[1].set_xticks([])
 divider = make_axes_locatable(ax[1])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img1, cax=cax, ticks=(2.860E-10,2.900E-10,2.940E-10,2.980E-10))
+cb = plt.colorbar(img1, cax=cax)#, ticks=(2.860E-10,2.900E-10,2.940E-10,2.980E-10))
+#cb = plt.colorbar(img1, cax=cax, ticks=(2.785E-10,2.790E-10,2.795E-10,2.800E-10))
 
+# all peaks  no offset
+#cb = plt.colorbar(img1, cax=cax, ticks=(2.78E-10, 2.82E-10, 2.860E-10))
 #tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
 
 #plt.subplot(413)
 norm3 = DivergingNorm( vcenter=0)
-img2 = ax[2].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_alpha[:cutYat,start_cutXat:cutXat], cmap='coolwarm', interpolation='none',extent=extent_microns_cut, norm=norm3) 
+img2 = ax[2].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_alpha[:cutYat,start_cutXat:cutXat], cmap='coolwarm', interpolation='none',extent=extent_microns_cut,norm=norm3) 
 # cut in extent_motorposition. x-pixel nbr 67 is at 2.0194197798363955
 ax[2].set_title(r'$\alpha$ (deg)', loc='left', pad =-12)
 ax[2].set_ylabel(r'$\mu$m')
 ax[2].set_xticks([])
 divider = make_axes_locatable(ax[2])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img2, cax=cax)#, ticks=(-1.5, 0, 1.5))
+cb = plt.colorbar(img2, cax=cax, ticks=(-0.5, 0, 0.5))
 
 tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_ticks()
 
@@ -473,7 +499,7 @@ tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator;po.update_
    
 #plt.subplot(414)
 norm4 = DivergingNorm( vcenter=0)
-img3 = ax[3].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_beta[:cutYat,start_cutXat:cutXat], cmap='bwr',interpolation='none',extent=extent_microns_cut, norm=norm4) 
+img3 = ax[3].imshow(XRD_mask[:cutYat,start_cutXat:cutXat]*XRD_beta[:cutYat,start_cutXat:cutXat], cmap='bwr',interpolation='none',extent=extent_microns_cut) 
 plt.setp(ax[3].xaxis.get_majorticklabels(), rotation=70 )
 ax[3].set_title('$\\beta$ (deg)', loc='left', pad =-12)
 #ax[3].set_xticks([])
@@ -483,7 +509,7 @@ ax[3].set_xlabel(r'$\mu$m')
 ax[3].set_ylabel(r'$\mu$m')
 divider = make_axes_locatable(ax[3])
 cax = divider.append_axes("right", size="5%", pad=0.05)
-cb = plt.colorbar(img3, cax=cax)#, ticks=(-6, -3, 0 ))
+cb = plt.colorbar(img3, cax=cax, ticks=(-0.5, 0, 0.5))#, ticks=(-6, -3, 0 ))
 
 plt.show()
 #tick_locator = ticker.MaxNLocator(nbins=4); po.locator = tick_locator; po.update_ticks()
