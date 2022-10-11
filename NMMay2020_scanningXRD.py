@@ -46,7 +46,7 @@ diff_data = np.load(r'C:\Users\Sanna\NanoMAX_May2022_Perovskites_nparray\s288-30
 ##all peaks no offset in x
 y_offset = 0# 8 
 z_offset = -58# (x on the detector)
-x_offset = 
+x_offset = 0
 
 #extra cropping
 #diff_data = diff_data[:,:,0:220]
@@ -187,7 +187,7 @@ def def_q_vectors():
     # qx defined as centered around 0, that means adding the component from q1 (check Qx definition below)
     #TODO add +offset in x, if the rocking curve is not centered around the rocking curve maximum.
     #x_offset
-    q3 = np.linspace(-g.dq3*g.shape[0]/2. + g.sintheta()*q1.min() , g.dq3*g.shape[0]/2.+ g.sintheta()*q1.max(), g.shape[0]) #~x       
+    q3 = np.linspace(-g.dq3*g.shape[0]/2. + g.sintheta()*q1.min() +x_offset*g.dq3, g.dq3*g.shape[0]/2.+ g.sintheta()*q1.max()+x_offset*g.dq3, g.shape[0]) #~x       
     #offset from calibrated detector center
     # neg offset just because of how i rotated the dataset now with lower y to the left
     q2 = np.linspace(-g.dq2*g.shape[2]/2. + g.dq2*y_offset, g.dq2*g.shape[2]/2. + g.dq2*y_offset, g.shape[2]) #        ~y
